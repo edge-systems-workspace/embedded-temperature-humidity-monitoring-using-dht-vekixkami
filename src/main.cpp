@@ -1,45 +1,58 @@
-#include <Arduino.h>   // Core Arduino library (automatically included in most IDEs)
+#include <Arduino.h>
+#include <Servo.h>
 
-#include <DHT.h>       // Library to handle DHT11/DHT22 temperature & humidity sensors
+/**
+ * @file main.cpp
+ * @brief Embedded Servo Motor Control using MG995
+ * @author Vedansh
+ * @date 2026-02-28
+ *
+ * @details
+ * This program controls a Servo Motor (MG995).
+ * The servo rotates between 0° and 180°,
+ * demonstrating angle control using PWM signals.
+ */
 
-#define DHTPIN 2       // Define the digital pin where the DHT11 data pin is connected
-#define DHTTYPE DHT11  // Specify the type of DHT sensor (DHT11 in this case)
+// Define servo signal pin
+#define SERVO_PIN 9
 
-// Create a DHT object with the specified pin and sensor type
-DHT dht(DHTPIN, DHTTYPE);
+// Create servo object
+Servo myServo;
 
+// Variable to store angle
+int angle;
+
+/**
+ * @brief Initializes serial communication and attaches servo.
+ */
 void setup() {
-    Serial.begin(9600);   // Start serial communication at 9600 baud rate
 
-    dht.begin();          // Initialize the DHT sensor
+    Serial.begin(9600);
 
-    // Print a startup message to Serial Monitor
-    Serial.println("DHT11 Temperature & Humidity Monitoring System Started...");
+    // Attach servo to defined pin
+    myServo.attach(SERVO_PIN);
+
+    Serial.println("Servo Motor Control System Initialized");
 }
 
+/**
+ * @brief Rotates servo between 0° and 180°.
+ */
 void loop() {
 
-    // Read humidity value from the sensor
-    float humidity = dht.readHumidity();
-
-    // Read temperature value in Celsius from the sensor
-    float temperature = dht.readTemperature();
-
-    // Check if any reading failed (NaN = Not a Number)
-    if (isnan(humidity) || isnan(temperature)) {
-        Serial.println("Error: Failed to read from DHT sensor!");
-        return;  // Exit loop iteration and try again in next cycle
+    // Rotate from 0° to 180°
+    for (angle = 0; angle <= 180; angle += 10) {
+        myServo.write(angle);
+        Serial.print("Angle: ");
+        Serial.println(angle);
+        delay(500);
     }
 
-    // Print temperature value
-    Serial.print("Temperature: ");
-    Serial.print(temperature);
-    Serial.print(" °C | Humidity: ");
-
-    // Print humidity value
-    Serial.print(humidity);
-    Serial.println(" %");
-
-    // Wait for 2 seconds before taking the next reading
-    delay(2000);
+    // Rotate back from 180° to 0°
+    for (angle = 180; angle >= 0; angle -= 10) {
+        myServo.write(angle);
+        Serial.print("Angle: ");
+        Serial.println(angle);
+        delay(500);
+    }
 }
