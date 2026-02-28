@@ -1,58 +1,92 @@
 #include <Arduino.h>
-#include <Servo.h>
+#include <DHT.h>
 
 /**
- * @file main.cpp
- * @brief Embedded Servo Motor Control using MG995
+ * @file dht_monitor.ino
+ * @brief Temperature and Humidity monitoring using DHT11 sensor.
  * @author Vedansh
  * @date 2026-02-28
  *
  * @details
- * This program controls a Servo Motor (MG995).
- * The servo rotates between 0° and 180°,
- * demonstrating angle control using PWM signals.
+ * This program reads temperature and humidity data from a DHT11 sensor
+ * connected to an Arduino board and prints the values to the Serial Monitor
+ * every 2 seconds. It demonstrates basic sensor interfacing and serial
+ * communication in an embedded system.
  */
 
-// Define servo signal pin
-#define SERVO_PIN 9
+/** @brief Digital pin connected to the DHT11 data pin */
+#define DHTPIN 2
 
-// Create servo object
-Servo myServo;
-
-// Variable to store angle
-int angle;
+/** @brief Type of DHT sensor being used (DHT11) */
+#define DHTTYPE DHT11
 
 /**
- * @brief Initializes serial communication and attaches servo.
+ * @brief DHT sensor object
+ *
+ * Initializes the DHT sensor with the specified pin and type.
+ */
+DHT dht(DHTPIN, DHTTYPE);
+
+/**
+ * @brief Arduino setup function
+ *
+ * Initializes serial communication and starts the DHT sensor.
+ * This function runs once when the Arduino boots.
  */
 void setup() {
+    Serial.begin(9600);   ///< Start serial communication at 9600 baud rate
+    dht.begin();          ///< Initialize the DHT sensor
 
-    Serial.begin(9600);
-
-    // Attach servo to defined pin
-    myServo.attach(SERVO_PIN);
-
-    Serial.println("Servo Motor Control System Initialized");
+    Serial.println("DHT11 Temperature & Humidity Monitoring System Started...");
 }
 
 /**
- * @brief Rotates servo between 0° and 180°.
+ * @brief Arduino main loop function
+ *
+ * Continuously reads humidity and temperature values from the DHT11 sensor.
+ * If the sensor reading fails, an error message is printed.
+ * Otherwise, the temperature (°C) and humidity (%) are displayed
+ * on the Serial Monitor every 2 seconds.
  */
 void loop() {
 
-    // Rotate from 0° to 180°
-    for (angle = 0; angle <= 180; angle += 10) {
-        myServo.write(angle);
-        Serial.print("Angle: ");
-        Serial.println(angle);
-        delay(500);
+    /**
+     * @brief Read humidity from the DHT sensor
+     * @return Humidity value in percentage (%)
+     */
+    float humidity = dht.readHumidity();
+
+    /**
+     * @brief Read temperature from the DHT sensor
+     * @return Temperature value in Celsius (°C)
+     */
+    float temperature = dht.readTemperature();
+
+    /**
+     * @brief Validate sensor readings
+     *
+     * Checks if the sensor returned invalid values (NaN).
+     * If invalid, an error message is displayed and the loop iteration ends.
+     */
+    if (isnan(humidity) || isnan(temperature)) {
+        Serial.println("Error: Failed to read from DHT sensor!");
+        return;
     }
 
-    // Rotate back from 180° to 0°
-    for (angle = 180; angle >= 0; angle -= 10) {
-        myServo.write(angle);
-        Serial.print("Angle: ");
-        Serial.println(angle);
-        delay(500);
-    }
+    /**
+     * @brief Print temperature and humidity to Serial Monitor
+     */
+    Serial.print("Temperature: ");
+    Serial.print(temperature);
+    Serial.print(" °C | Humidity: ");
+    Serial.print(humidity);
+    Serial.println(" %");
+
+    /**
+     * @brief Delay before next sensor reading
+     *
+     * Waits 2000 milliseconds (2 seconds) to avoid excessive polling,
+     * as DHT11 has a slow sampling rate.
+     */
+    delay(2000);
 }
